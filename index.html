@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>長安國小書箱資源庫</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #C1E1B9;
+        }
+        .serif-title {
+            font-family: 'Noto Serif TC', serif;
+        }
+        .wood-shelf {
+            border-bottom: 20px solid #8B5A2B;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        .wood-shelf::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: -10px;
+            right: -10px;
+            height: 5px;
+            background-color: #5C3A18;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-gray-800 p-4 md:p-8">
+    
+    <div class="max-w-5xl mx-auto w-full flex-grow flex flex-col">
+        
+        <!-- Header 區塊 -->
+        <header class="text-center mt-2 md:mt-4 mb-6 flex flex-col items-center">
+            <div class="flex items-center justify-center gap-3 md:gap-4 mb-2">
+                <svg class="w-16 h-16 md:w-20 md:h-20 transition-transform hover:scale-110 hover:-rotate-3 drop-shadow-md" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 85L15 75V25L50 35L85 25V75L50 85Z" fill="#B06B1A"/>
+                    <path d="M50 80L20 71V23L50 31L80 23V71L50 80Z" fill="#FFF8E7"/>
+                    <path d="M42 28V10H58V32L50 28L42 28Z" fill="#CC4B40"/>
+                    <path d="M28 45H40M28 55H40M28 65H40" stroke="#D4C4A8" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="63" cy="55" r="2.5" fill="#4A3B32"/>
+                    <circle cx="73" cy="55" r="2.5" fill="#4A3B32"/>
+                    <path d="M65 58 Q 68 61 71 58" stroke="#4A3B32" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <circle cx="60" cy="58" r="3" fill="#FFAAA5" opacity="0.7"/>
+                    <circle cx="76" cy="58" r="3" fill="#FFAAA5" opacity="0.7"/>
+                </svg>
+                <h1 class="text-4xl md:text-5xl font-black text-[#1F3A4A] tracking-wider serif-title drop-shadow-sm">
+                    長安國小書箱資源庫
+                </h1>
+            </div>
+            
+            <a href="https://read.moe.edu.tw/193661/library" target="_blank" rel="noopener noreferrer" 
+               class="mt-1 flex items-center justify-center gap-2 text-xl md:text-2xl font-bold text-[#B06B1A] hover:text-[#CC4B40] transition-colors group">
+                <span class="border-b-[3px] border-[#B06B1A] group-hover:border-[#CC4B40] pb-1 transition-colors">長安圖書系統</span>
+                <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                </svg>
+            </a>
+        </header>
+
+        <!-- 搜尋列 -->
+        <div class="w-full max-w-2xl mx-auto mb-8">
+            <form id="searchForm" class="relative flex items-center bg-white rounded-full shadow-lg border-[3px] border-white overflow-hidden focus-within:border-[#E8A343] transition-colors">
+                <div class="pl-4 md:pl-5 text-[#86A87A]">
+                    <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <input type="text" id="searchInput" placeholder="輸入書箱登錄號 或 關鍵字..." 
+                       class="w-full py-2.5 md:py-3 px-3 text-sm md:text-base text-gray-700 font-bold focus:outline-none placeholder-[#86A87A]">
+                <button type="submit" class="bg-[#E8A343] hover:bg-[#d89232] text-[#2A433A] font-black text-sm md:text-base py-2.5 md:py-3 px-6 md:px-8 h-full transition-colors">
+                    SEARCH
+                </button>
+            </form>
+        </div>
+
+        <main class="w-full flex-grow flex flex-col pt-4">
+            
+            <!-- 載入中動畫 -->
+            <div id="loading" class="flex flex-col items-center justify-center py-20">
+                <svg class="animate-spin h-12 w-12 mb-4 text-[#B06B1A]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-xl font-bold text-[#2A433A] tracking-wider">資源載入中，請稍候...</p>
+            </div>
+
+            <!-- 書櫃容器 -->
+            <div id="book-container" class="hidden">
+                <!-- JavaScript 動態生成的木板與書籍會放在這裡 -->
+            </div>
+
+            <!-- 分頁按鈕 -->
+            <div id="pagination" class="flex justify-center mt-6 mb-12 hidden">
+                <button id="next-page-btn" class="bg-[#2A433A] hover:bg-[#1b2b25] text-white text-lg font-bold py-3 px-10 rounded-full shadow-lg transition transform hover:-translate-y-1">
+                    顯示更多書箱 ➯
+                </button>
+            </div>
+            
+        </main>
+    </div>
+
+    <!-- 將模組化的 JavaScript 寫在 type="module" 中 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // ==========================================
+        // 2. 請在此貼上您的 Firebase Config
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let allBooks = [];
+        let filteredBooks = [];
+        let currentPage = 1;
+        const booksPerPage = 10;
+
+        // 從 Firestore 非同步讀取資料 (會比 GAS 快很多！)
+        async function fetchData() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('book-container').classList.add('hidden');
+            document.getElementById('pagination').classList.add('hidden');
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "books"));
+                allBooks = [];
+                querySnapshot.forEach((doc) => {
+                    allBooks.push(doc.data());
+                });
+                
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('book-container').classList.remove('hidden');
+                
+                resetAndDisplayRandom();
+            } catch (error) {
+                console.error('資料讀取錯誤:', error);
+                document.getElementById('loading').innerHTML = '<p class="text-red-500 text-xl font-bold">載入失敗，請檢查您的 Firebase 設定或網路連線。</p>';
+            }
+        }
+
+        // 洗牌演算法
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // 渲染書籍到書架
+        function renderBooks(booksToDisplay) {
+            const container = document.getElementById('book-container');
+            container.innerHTML = '';
+
+            if (booksToDisplay.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-[#2A433A]">
+                        <p class="text-2xl font-bold">找不到相符的書箱，請嘗試其他關鍵字。</p>
+                    </div>`;
+                return;
+            }
+
+            const booksPerRow = 5;
+            for (let i = 0; i < booksToDisplay.length; i += booksPerRow) {
+                const rowBooks = booksToDisplay.slice(i, i + booksPerRow);
+                
+                const shelfDiv = document.createElement('div');
+                shelfDiv.className = 'wood-shelf grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 pb-2 px-4';
+                
+                rowBooks.forEach(book => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-[#fdfbf7] border-t-8 border-[#B06B1A] rounded-lg shadow-md p-4 flex flex-col justify-between hover:shadow-xl transition-shadow relative top-4';
+                    
+                    let noteHtml = book.note 
+                        ? `<div class="bg-amber-50 p-3 rounded text-sm text-gray-700 mt-3 border border-amber-100 flex-grow leading-relaxed"><span class="font-bold text-[#8B5A2B]">說明：</span><br>${book.note}</div>`
+                        : `<div class="p-3 mt-3 flex-grow"></div>`;
+
+                    card.innerHTML = `
+                        <div class="flex flex-col h-full">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-[#2A433A] text-white text-xs px-2 py-1 rounded font-bold tracking-wider">${book.id}</span>
+                            </div>
+                            <h2 class="text-xl font-bold text-gray-900 leading-snug serif-title mt-1">${book.name}</h2>
+                            ${noteHtml}
+                            <a href="${book.descLink}" target="_blank" rel="noopener noreferrer" 
+                               class="mt-4 inline-block text-center bg-[#E8A343] hover:bg-[#d89232] text-[#2A433A] font-bold py-2 px-4 rounded transition-colors text-sm w-full">
+                               查看書箱描述
+                            </a>
+                        </div>
+                    `;
+                    shelfDiv.appendChild(card);
+                });
+                container.appendChild(shelfDiv);
+            }
+        }
+
+        function displayCurrentPage() {
+            const startIndex = (currentPage - 1) * booksPerPage;
+            const endIndex = startIndex + booksPerPage;
+            const booksToDisplay = filteredBooks.slice(startIndex, endIndex);
+            
+            renderBooks(booksToDisplay);
+
+            if (endIndex < filteredBooks.length) {
+                document.getElementById('pagination').classList.remove('hidden');
+            } else {
+                document.getElementById('pagination').classList.add('hidden');
+            }
+        }
+
+        function resetAndDisplayRandom() {
+            filteredBooks = shuffleArray([...allBooks]); 
+            currentPage = 1;
+            displayCurrentPage();
+        }
+
+        // 綁定搜尋事件
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            if (keyword === "") {
+                resetAndDisplayRandom();
+                return;
+            }
+
+            filteredBooks = allBooks.filter(book => {
+                return (book.id && book.id.toLowerCase().includes(keyword)) ||
+                       (book.name && book.name.toLowerCase().includes(keyword));
+            });
+
+            currentPage = 1; 
+            displayCurrentPage();
+        });
+
+        // 綁定下一頁事件
+        document.getElementById('next-page-btn').addEventListener('click', function() {
+            currentPage++;
+            displayCurrentPage();
+            window.scrollTo({
+                top: document.getElementById('searchForm').offsetTop - 20,
+                behavior: 'smooth'
+            });
+        });
+
+        // 初始化抓取資料
+        fetchData();
+    </script>
+</body>
+</html>
