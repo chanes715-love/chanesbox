@@ -34,12 +34,20 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col text-gray-800 p-4 md:p-8">
+<body class="min-h-screen flex flex-col text-gray-800 p-4 md:p-8 relative">
     
+    <!-- 右上角後台管理連結 (齒輪圖示) -->
+    <a href="admin.html" title="進入後台管理系統" class="absolute top-4 right-4 md:top-8 md:right-8 text-[#2A433A] hover:text-[#E8A343] transition-all transform hover:rotate-90 z-50">
+        <svg class="w-8 h-8 md:w-10 md:h-10 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+    </a>
+
     <div class="max-w-5xl mx-auto w-full flex-grow flex flex-col">
         
         <!-- Header 區塊 -->
-        <header class="text-center mt-2 md:mt-4 mb-6 flex flex-col items-center">
+        <header class="text-center mt-6 md:mt-4 mb-6 flex flex-col items-center">
             <div class="flex items-center justify-center gap-3 md:gap-4 mb-2">
                 <svg class="w-16 h-16 md:w-20 md:h-20 transition-transform hover:scale-110 hover:-rotate-3 drop-shadow-md" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M50 85L15 75V25L50 35L85 25V75L50 85Z" fill="#B06B1A"/>
@@ -96,32 +104,38 @@
                 <!-- JavaScript 動態生成的木板與書籍會放在這裡 -->
             </div>
 
-            <!-- 分頁按鈕 -->
-            <div id="pagination" class="flex justify-center mt-6 mb-12 hidden">
-                <button id="next-page-btn" class="bg-[#2A433A] hover:bg-[#1b2b25] text-white text-lg font-bold py-3 px-10 rounded-full shadow-lg transition transform hover:-translate-y-1">
-                    顯示更多書箱 ➯
+            <!-- 標準上下頁按鈕區塊 -->
+            <div id="pagination" class="flex justify-center items-center gap-4 mt-6 mb-12 hidden">
+                <button id="prev-page-btn" class="bg-[#2A433A] hover:bg-[#1b2b25] text-white text-base md:text-lg font-bold py-2 px-6 rounded-full shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    ⇦ 上一頁
+                </button>
+                <span id="page-info" class="text-lg md:text-xl font-bold text-[#1F3A4A] bg-white px-4 py-1 rounded-full shadow-sm">
+                    <!-- 顯示 1 / 5 -->
+                </span>
+                <button id="next-page-btn" class="bg-[#2A433A] hover:bg-[#1b2b25] text-white text-base md:text-lg font-bold py-2 px-6 rounded-full shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    下一頁 ⇨
                 </button>
             </div>
             
         </main>
     </div>
 
-    <!-- 將模組化的 JavaScript 寫在 type="module" 中 -->
+    <!-- Firebase 模組化邏輯 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         // ==========================================
-        // 2. 請在此貼上您的 Firebase Config
+        // !!! 請在此貼上您的 Firebase Config !!!
         // ==========================================
-   const firebaseConfig = {
-  apiKey: "AIzaSyDrog2SU3iOuaNXnMT6A5Ekrdmd-5jG6A0",
-  authDomain: "bookbox-ee296.firebaseapp.com",
-  projectId: "bookbox-ee296",
-  storageBucket: "bookbox-ee296.firebasestorage.app",
-  messagingSenderId: "1094028983994",
-  appId: "1:1094028983994:web:cd0dfcea689b93fdcb0c83"
-};
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -131,7 +145,10 @@
         let currentPage = 1;
         const booksPerPage = 10;
 
-        // 從 Firestore 非同步讀取資料 (會比 GAS 快很多！)
+        // 定義書本的彩色主題 (紅、橙、綠、藍、紫、桃紅)
+        const bookColors = ['#CC4B40', '#E8A343', '#86A87A', '#4A8E8B', '#8C6C9E', '#D4727A'];
+
+        // 從 Firestore 讀取資料
         async function fetchData() {
             document.getElementById('loading').classList.remove('hidden');
             document.getElementById('book-container').classList.add('hidden');
@@ -144,28 +161,22 @@
                     allBooks.push(doc.data());
                 });
                 
+                // 預設以登錄號排序，讓翻頁有規律
+                allBooks.sort((a, b) => a.id.localeCompare(b.id));
+
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('book-container').classList.remove('hidden');
                 
-                resetAndDisplayRandom();
+                filteredBooks = [...allBooks];
+                currentPage = 1;
+                displayCurrentPage();
             } catch (error) {
                 console.error('資料讀取錯誤:', error);
                 document.getElementById('loading').innerHTML = '<p class="text-red-500 text-xl font-bold">載入失敗，請檢查您的 Firebase 設定或網路連線。</p>';
             }
         }
 
-        // 洗牌演算法
-        function shuffleArray(array) {
-            let currentIndex = array.length, randomIndex;
-            while (currentIndex != 0) {
-                randomIndex = Math.floor(Math.random() * currentIndex);
-                currentIndex--;
-                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-            }
-            return array;
-        }
-
-        // 渲染書籍到書架
+        // 渲染彩色書籍到書架
         function renderBooks(booksToDisplay) {
             const container = document.getElementById('book-container');
             container.innerHTML = '';
@@ -185,9 +196,13 @@
                 const shelfDiv = document.createElement('div');
                 shelfDiv.className = 'wood-shelf grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 pb-2 px-4';
                 
-                rowBooks.forEach(book => {
+                rowBooks.forEach((book, index) => {
+                    // 根據索引給予書本不同的顏色主題
+                    const themeColor = bookColors[(i + index) % bookColors.length];
+
                     const card = document.createElement('div');
-                    card.className = 'bg-[#fdfbf7] border-t-8 border-[#B06B1A] rounded-lg shadow-md p-4 flex flex-col justify-between hover:shadow-xl transition-shadow relative top-4';
+                    card.className = 'bg-[#fdfbf7] border-t-8 rounded-lg shadow-md p-4 flex flex-col justify-between hover:shadow-xl transition-shadow relative top-4';
+                    card.style.borderColor = themeColor; // 套用彩色邊框
                     
                     let noteHtml = book.note 
                         ? `<div class="bg-amber-50 p-3 rounded text-sm text-gray-700 mt-3 border border-amber-100 flex-grow leading-relaxed"><span class="font-bold text-[#8B5A2B]">說明：</span><br>${book.note}</div>`
@@ -196,12 +211,13 @@
                     card.innerHTML = `
                         <div class="flex flex-col h-full">
                             <div class="flex justify-between items-start mb-2">
-                                <span class="bg-[#2A433A] text-white text-xs px-2 py-1 rounded font-bold tracking-wider">${book.id}</span>
+                                <span class="text-white text-xs px-2 py-1 rounded font-bold tracking-wider shadow-sm" style="background-color: ${themeColor};">${book.id}</span>
                             </div>
                             <h2 class="text-xl font-bold text-gray-900 leading-snug serif-title mt-1">${book.name}</h2>
                             ${noteHtml}
                             <a href="${book.descLink}" target="_blank" rel="noopener noreferrer" 
-                               class="mt-4 inline-block text-center bg-[#E8A343] hover:bg-[#d89232] text-[#2A433A] font-bold py-2 px-4 rounded transition-colors text-sm w-full">
+                               class="mt-4 inline-block text-center text-white font-bold py-2 px-4 rounded transition-opacity hover:opacity-80 text-sm w-full"
+                               style="background-color: ${themeColor};">
                                查看書箱描述
                             </a>
                         </div>
@@ -212,24 +228,23 @@
             }
         }
 
+        // 處理上下頁顯示邏輯
         function displayCurrentPage() {
+            const totalPages = Math.ceil(filteredBooks.length / booksPerPage) || 1;
             const startIndex = (currentPage - 1) * booksPerPage;
             const endIndex = startIndex + booksPerPage;
             const booksToDisplay = filteredBooks.slice(startIndex, endIndex);
             
             renderBooks(booksToDisplay);
 
-            if (endIndex < filteredBooks.length) {
-                document.getElementById('pagination').classList.remove('hidden');
-            } else {
-                document.getElementById('pagination').classList.add('hidden');
-            }
-        }
+            // 更新頁數顯示
+            document.getElementById('page-info').textContent = `${currentPage} / ${totalPages} 頁`;
 
-        function resetAndDisplayRandom() {
-            filteredBooks = shuffleArray([...allBooks]); 
-            currentPage = 1;
-            displayCurrentPage();
+            // 判斷按鈕是否可以點擊
+            document.getElementById('prev-page-btn').disabled = (currentPage === 1);
+            document.getElementById('next-page-btn').disabled = (currentPage === totalPages);
+
+            document.getElementById('pagination').classList.remove('hidden');
         }
 
         // 綁定搜尋事件
@@ -238,27 +253,34 @@
             const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
 
             if (keyword === "") {
-                resetAndDisplayRandom();
-                return;
+                filteredBooks = [...allBooks];
+            } else {
+                filteredBooks = allBooks.filter(book => {
+                    return (book.id && book.id.toLowerCase().includes(keyword)) ||
+                           (book.name && book.name.toLowerCase().includes(keyword));
+                });
             }
-
-            filteredBooks = allBooks.filter(book => {
-                return (book.id && book.id.toLowerCase().includes(keyword)) ||
-                       (book.name && book.name.toLowerCase().includes(keyword));
-            });
-
             currentPage = 1; 
             displayCurrentPage();
         });
 
-        // 綁定下一頁事件
+        // 綁定「上一頁」事件
+        document.getElementById('prev-page-btn').addEventListener('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                displayCurrentPage();
+                window.scrollTo({ top: document.getElementById('searchForm').offsetTop - 20, behavior: 'smooth' });
+            }
+        });
+
+        // 綁定「下一頁」事件
         document.getElementById('next-page-btn').addEventListener('click', function() {
-            currentPage++;
-            displayCurrentPage();
-            window.scrollTo({
-                top: document.getElementById('searchForm').offsetTop - 20,
-                behavior: 'smooth'
-            });
+            const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayCurrentPage();
+                window.scrollTo({ top: document.getElementById('searchForm').offsetTop - 20, behavior: 'smooth' });
+            }
         });
 
         // 初始化抓取資料
