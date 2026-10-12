@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>長安國小書箱 - 後台管理系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { background-color: #F4F9F2; font-family: 'Noto Sans TC', sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800">
+
+    <!-- ================= 登入介面 ================= -->
+    <div id="loginSection" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-xl shadow-lg max-w-sm w-full border-t-4 border-green-600">
+            <h1 class="text-2xl font-bold text-center text-green-800 mb-6">書箱資源庫 - 後台登入</h1>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">管理員信箱</label>
+                    <input type="email" id="loginEmail" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">密碼</label>
+                    <input type="password" id="loginPassword" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500">
+                </div>
+                <p id="loginError" class="text-red-500 text-sm hidden"></p>
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                    登入系統
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= 管理介面 ================= -->
+    <div id="adminSection" class="hidden min-h-screen flex flex-col">
+        
+        <!-- 頂部導覽列 -->
+        <header class="bg-green-700 text-white p-4 shadow-md flex justify-between items-center">
+            <h1 class="text-xl font-bold">📚 長安國小書箱後台管理</h1>
+            <div class="space-x-4">
+                <span id="userEmailDisplay" class="text-sm text-green-200"></span>
+                <button id="btnOpenPwdModal" class="text-sm bg-green-600 hover:bg-green-500 px-3 py-1 rounded">修改密碼</button>
+                <button id="btnLogout" class="text-sm bg-red-600 hover:bg-red-500 px-3 py-1 rounded">登出</button>
+            </div>
+        </header>
+
+        <main class="flex-grow p-6 max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- 左側：功能操作區 -->
+            <div class="md:col-span-1 space-y-6">
+                <!-- 匯入 Excel 區塊 -->
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+                    <h2 class="text-lg font-bold mb-4 text-blue-700">1. 批次匯入 (Excel)</h2>
+                    <input type="file" id="excelFile" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4"/>
+                    <button id="btnImport" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">開始匯入至 Firebase</button>
+                    <p id="importStatus" class="mt-2 text-sm font-bold text-gray-600"></p>
+                </div>
+
+                <!-- 單筆新增/修改表單 -->
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-amber-500">
+                    <h2 id="formTitle" class="text-lg font-bold mb-4 text-amber-700">2. 單筆新增書箱</h2>
+                    <form id="bookForm" class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700">登錄號 (ID) <span class="text-red-500">*必填不能重複</span></label>
+                            <input type="text" id="bookId" required class="w-full px-3 py-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700">書箱名稱 <span class="text-red-500">*必填</span></label>
+                            <input type="text" id="bookName" required class="w-full px-3 py-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700">書箱描述 (網址)</label>
+                            <input type="url" id="bookDesc" class="w-full px-3 py-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700">說明</label>
+                            <textarea id="bookNote" rows="3" class="w-full px-3 py-2 border rounded"></textarea>
+                        </div>
+                        <div class="flex gap-2 pt-2">
+                            <button type="submit" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded">儲存資料</button>
+                            <button type="button" id="btnCancelEdit" class="hidden bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">取消修改</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 右側：資料列表區 -->
+            <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-gray-800">現有書箱列表 (<span id="totalBooks">0</span>)</h2>
+                    <button id="btnRefresh" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm">重新整理</button>
+                </div>
+                <div class="overflow-x-auto h-[600px] border rounded">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">登錄號</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">書名</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="booksTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- JS動態產生 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 修改密碼 Modal -->
+    <div id="pwdModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-96">
+            <h2 class="text-xl font-bold mb-4">修改密碼</h2>
+            <form id="pwdForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm">新密碼 (至少6碼)</label>
+                    <input type="password" id="newPwd" required minlength="6" class="w-full px-3 py-2 border rounded">
+                </div>
+                <div>
+                    <label class="block text-sm">確認新密碼</label>
+                    <input type="password" id="newPwdConfirm" required minlength="6" class="w-full px-3 py-2 border rounded">
+                </div>
+                <p id="pwdError" class="text-red-500 text-sm hidden"></p>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" id="btnCancelPwd" class="px-4 py-2 bg-gray-300 rounded">取消</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">確認修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase 邏輯 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // ==========================================
+        // !!! 請貼上您的 Firebase Config !!!
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- UI 切換邏輯 ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('adminSection').classList.remove('hidden');
+                document.getElementById('userEmailDisplay').textContent = user.email;
+                loadBooks(); // 登入成功後載入列表
+            } else {
+                document.getElementById('loginSection').classList.remove('hidden');
+                document.getElementById('adminSection').classList.add('hidden');
+            }
+        });
+
+        // --- 1. 登入/登出系統 ---
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const pwd = document.getElementById('loginPassword').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, pwd);
+            } catch (error) {
+                const err = document.getElementById('loginError');
+                err.textContent = "登入失敗：帳號或密碼錯誤！";
+                err.classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
+
+        // --- 2. 修改密碼邏輯 ---
+        const pwdModal = document.getElementById('pwdModal');
+        document.getElementById('btnOpenPwdModal').addEventListener('click', () => pwdModal.classList.remove('hidden'));
+        document.getElementById('btnCancelPwd').addEventListener('click', () => pwdModal.classList.add('hidden'));
+        
+        document.getElementById('pwdForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const p1 = document.getElementById('newPwd').value;
+            const p2 = document.getElementById('newPwdConfirm').value;
+            const err = document.getElementById('pwdError');
+            
+            if(p1 !== p2) {
+                err.textContent = "兩次密碼不一致！";
+                err.classList.remove('hidden');
+                return;
+            }
+            try {
+                await updatePassword(auth.currentUser, p1);
+                alert('密碼修改成功！下次請使用新密碼登入。');
+                pwdModal.classList.add('hidden');
+                document.getElementById('pwdForm').reset();
+            } catch (error) {
+                err.textContent = "修改失敗。若登入太久，請登出重新登入後再修改。";
+                err.classList.remove('hidden');
+            }
+        });
+
+        // --- 3. 讀取並顯示書單列表 ---
+        async function loadBooks() {
+            const tbody = document.getElementById('booksTableBody');
+            tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-4 text-center text-gray-500">載入中...</td></tr>';
+            try {
+                const querySnapshot = await getDocs(collection(db, "books"));
+                const books = [];
+                querySnapshot.forEach(doc => books.push(doc.data()));
+                
+                // 依登錄號排序
+                books.sort((a, b) => a.id.localeCompare(b.id));
+                
+                document.getElementById('totalBooks').textContent = books.length;
+                tbody.innerHTML = '';
+                
+                books.forEach(book => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${book.id}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">${book.name}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-indigo-600 hover:text-indigo-900 mr-3 edit-btn" data-id="${book.id}">修改</button>
+                            <button class="text-red-600 hover:text-red-900 delete-btn" data-id="${book.id}">刪除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // 綁定編輯與刪除按鈕事件
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => editBook(e.target.dataset.id, books));
+                });
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => deleteBook(e.target.dataset.id));
+                });
+            } catch(e) {
+                tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-4 text-center text-red-500">讀取失敗，請檢查權限</td></tr>';
+            }
+        }
+        document.getElementById('btnRefresh').addEventListener('click', loadBooks);
+
+        // --- 4. 單筆新增 / 修改 ---
+        let isEditing = false;
+        
+        document.getElementById('bookForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const bookData = {
+                id: document.getElementById('bookId').value.trim(),
+                name: document.getElementById('bookName').value.trim(),
+                descLink: document.getElementById('bookDesc').value.trim(),
+                note: document.getElementById('bookNote').value.trim()
+            };
+            
+            try {
+                // setDoc 會新增或覆蓋
+                await setDoc(doc(db, "books", bookData.id), bookData);
+                alert(isEditing ? '修改成功！' : '新增成功！');
+                resetForm();
+                loadBooks();
+            } catch (error) {
+                alert("儲存失敗: " + error.message);
+            }
+        });
+
+        function editBook(id, books) {
+            const book = books.find(b => b.id === id);
+            if(book) {
+                document.getElementById('bookId').value = book.id;
+                document.getElementById('bookId').readOnly = true; // 修改時不允許改 ID
+                document.getElementById('bookId').classList.add('bg-gray-100');
+                document.getElementById('bookName').value = book.name;
+                document.getElementById('bookDesc').value = book.descLink;
+                document.getElementById('bookNote').value = book.note;
+                
+                document.getElementById('formTitle').textContent = "修改書箱: " + book.id;
+                document.getElementById('btnCancelEdit').classList.remove('hidden');
+                isEditing = true;
+                window.scrollTo(0, 0); // 滾動到表單
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('bookForm').reset();
+            document.getElementById('bookId').readOnly = false;
+            document.getElementById('bookId').classList.remove('bg-gray-100');
+            document.getElementById('formTitle').textContent = "2. 單筆新增書箱";
+            document.getElementById('btnCancelEdit').classList.add('hidden');
+            isEditing = false;
+        }
+        document.getElementById('btnCancelEdit').addEventListener('click', resetForm);
+
+        // --- 5. 刪除書籍 ---
+        async function deleteBook(id) {
+            if(confirm(`確定要刪除登錄號為 ${id} 的書箱嗎？刪除後無法復原！`)) {
+                try {
+                    await deleteDoc(doc(db, "books", id));
+                    loadBooks();
+                } catch(e) {
+                    alert('刪除失敗');
+                }
+            }
+        }
+
+        // --- 6. 批次匯入 Excel ---
+        document.getElementById('btnImport').addEventListener('click', () => {
+            const fileInput = document.getElementById('excelFile');
+            if (fileInput.files.length === 0) return alert("請先選擇 Excel 檔案！");
+            
+            const status = document.getElementById('importStatus');
+            status.textContent = "解析中，請勿關閉網頁...";
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet, {defval: ""}); 
+                    
+                    let count = 0;
+                    for(let row of json) {
+                        const id = row['書箱登錄號'];
+                        if(!id) continue;
+                        const bookData = {
+                            id: id.toString().trim(),
+                            name: row['書箱名稱'].toString().trim(),
+                            descLink: row['書箱描述'].toString().trim(),
+                            note: row['說明'].toString().trim()
+                        };
+                        await setDoc(doc(db, "books", bookData.id), bookData);
+                        count++;
+                        status.textContent = `匯入中: 已完成 ${count} 筆...`;
+                    }
+                    status.textContent = `匯入完成！共新增/更新了 ${count} 筆資料。`;
+                    fileInput.value = "";
+                    loadBooks(); // 更新列表
+                } catch (error) {
+                    status.textContent = "匯入失敗，請檢查檔案格式。";
+                }
+            };
+            reader.readAsArrayBuffer(fileInput.files[0]);
+        });
+    </script>
+</body>
+</html>
