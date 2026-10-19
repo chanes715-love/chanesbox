@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>長安國小書箱 - 後台管理系統</title>
+    <title>長安國小書箱後台管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -19,11 +19,11 @@
             <form id="loginForm" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">管理員信箱</label>
-                    <input type="email" id="loginEmail" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500">
+                    <input type="email" id="loginEmail" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">密碼</label>
-                    <input type="password" id="loginPassword" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500">
+                    <input type="password" id="loginPassword" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
                 </div>
                 <p id="loginError" class="text-red-500 text-sm hidden"></p>
                 <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
@@ -41,15 +41,16 @@
             <h1 class="text-xl font-bold">📚 長安國小書箱後台管理</h1>
             <div class="space-x-4">
                 <span id="userEmailDisplay" class="text-sm text-green-200"></span>
-                <button id="btnOpenPwdModal" class="text-sm bg-green-600 hover:bg-green-500 px-3 py-1 rounded">修改密碼</button>
+                <button id="btnOpenPwdModal" class="text-sm bg-green-600 hover:bg-green-500 px-3 py-1 rounded">修改我的密碼</button>
+                <a href="https://console.firebase.google.com/" target="_blank" class="text-sm bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded inline-block">管理員帳號設定 (控制台)</a>
                 <button id="btnLogout" class="text-sm bg-red-600 hover:bg-red-500 px-3 py-1 rounded">登出</button>
             </div>
         </header>
 
-        <main class="flex-grow p-6 max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 gap-6">
+        <main class="flex-grow p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             <!-- 左側：功能操作區 -->
-            <div class="md:col-span-1 space-y-6">
+            <div class="lg:col-span-1 space-y-6">
                 <!-- 匯入 Excel 區塊 -->
                 <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
                     <h2 class="text-lg font-bold mb-4 text-blue-700">1. 批次匯入 (Excel)</h2>
@@ -86,19 +87,30 @@
                 </div>
             </div>
 
-            <!-- 右側：資料列表區 -->
-            <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md">
+            <!-- 右側：資料列表區 (加入批次刪除) -->
+            <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-bold text-gray-800">現有書箱列表 (<span id="totalBooks">0</span>)</h2>
-                    <button id="btnRefresh" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm">重新整理</button>
+                    <div class="space-x-2">
+                        <button id="btnBatchDelete" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-4 py-2 rounded text-sm transition-colors">
+                            🗑️ 批次刪除勾選項
+                        </button>
+                        <button id="btnRefresh" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-4 py-2 rounded text-sm">
+                            重新整理
+                        </button>
+                    </div>
                 </div>
-                <div class="overflow-x-auto h-[600px] border rounded">
+                
+                <div class="overflow-y-auto flex-grow border rounded h-[600px]">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50 sticky top-0">
+                        <thead class="bg-gray-100 sticky top-0 z-10 shadow-sm">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">登錄號</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">書名</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">操作</th>
+                                <th class="px-4 py-3 text-center w-12">
+                                    <input type="checkbox" id="selectAll" class="w-4 h-4 text-green-600 rounded border-gray-300">
+                                </th>
+                                <th class="px-4 py-3 text-left text-sm font-bold text-gray-700 uppercase">登錄號</th>
+                                <th class="px-4 py-3 text-left text-sm font-bold text-gray-700 uppercase">書名</th>
+                                <th class="px-4 py-3 text-right text-sm font-bold text-gray-700 uppercase">操作</th>
                             </tr>
                         </thead>
                         <tbody id="booksTableBody" class="bg-white divide-y divide-gray-200">
@@ -160,30 +172,26 @@
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('adminSection').classList.remove('hidden');
                 document.getElementById('userEmailDisplay').textContent = user.email;
-                loadBooks(); // 登入成功後載入列表
+                loadBooks();
             } else {
                 document.getElementById('loginSection').classList.remove('hidden');
                 document.getElementById('adminSection').classList.add('hidden');
             }
         });
 
-        // --- 1. 登入/登出系統 ---
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const pwd = document.getElementById('loginPassword').value;
             try {
-                await signInWithEmailAndPassword(auth, email, pwd);
+                await signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value);
             } catch (error) {
-                const err = document.getElementById('loginError');
-                err.textContent = "登入失敗：帳號或密碼錯誤！";
-                err.classList.remove('hidden');
+                document.getElementById('loginError').textContent = "登入失敗：帳號或密碼錯誤！";
+                document.getElementById('loginError').classList.remove('hidden');
             }
         });
 
         document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
 
-        // --- 2. 修改密碼邏輯 ---
+        // --- 密碼修改邏輯 ---
         const pwdModal = document.getElementById('pwdModal');
         document.getElementById('btnOpenPwdModal').addEventListener('click', () => pwdModal.classList.remove('hidden'));
         document.getElementById('btnCancelPwd').addEventListener('click', () => pwdModal.classList.add('hidden'));
@@ -193,33 +201,28 @@
             const p1 = document.getElementById('newPwd').value;
             const p2 = document.getElementById('newPwdConfirm').value;
             const err = document.getElementById('pwdError');
-            
             if(p1 !== p2) {
-                err.textContent = "兩次密碼不一致！";
-                err.classList.remove('hidden');
-                return;
+                err.textContent = "兩次密碼不一致！"; err.classList.remove('hidden'); return;
             }
             try {
                 await updatePassword(auth.currentUser, p1);
-                alert('密碼修改成功！下次請使用新密碼登入。');
+                alert('密碼修改成功！');
                 pwdModal.classList.add('hidden');
                 document.getElementById('pwdForm').reset();
             } catch (error) {
-                err.textContent = "修改失敗。若登入太久，請登出重新登入後再修改。";
-                err.classList.remove('hidden');
+                err.textContent = "修改失敗。請登出重新登入後再試。"; err.classList.remove('hidden');
             }
         });
 
-        // --- 3. 讀取並顯示書單列表 ---
+        // --- 讀取並顯示書單列表 (加入 Checkbox) ---
         async function loadBooks() {
             const tbody = document.getElementById('booksTableBody');
-            tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-4 text-center text-gray-500">載入中...</td></tr>';
+            document.getElementById('selectAll').checked = false; // 重置全選框
+            tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">載入中...</td></tr>';
             try {
                 const querySnapshot = await getDocs(collection(db, "books"));
                 const books = [];
                 querySnapshot.forEach(doc => books.push(doc.data()));
-                
-                // 依登錄號排序
                 books.sort((a, b) => a.id.localeCompare(b.id));
                 
                 document.getElementById('totalBooks').textContent = books.length;
@@ -227,33 +230,67 @@
                 
                 books.forEach(book => {
                     const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-50 transition-colors';
                     tr.innerHTML = `
-                        <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${book.id}</td>
-                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">${book.name}</td>
-                        <td class="px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
-                            <button class="text-indigo-600 hover:text-indigo-900 mr-3 edit-btn" data-id="${book.id}">修改</button>
-                            <button class="text-red-600 hover:text-red-900 delete-btn" data-id="${book.id}">刪除</button>
+                        <td class="px-4 py-3 text-center">
+                            <input type="checkbox" value="${book.id}" class="book-cb w-4 h-4 text-green-600 rounded border-gray-300 cursor-pointer">
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-base font-bold text-gray-900">${book.id}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-base text-gray-600">${book.name}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-right text-base font-medium">
+                            <button class="text-indigo-600 hover:text-indigo-900 mr-4 font-bold edit-btn" data-id="${book.id}">修改</button>
+                            <button class="text-red-600 hover:text-red-900 font-bold delete-btn" data-id="${book.id}">刪除</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
                 });
 
-                // 綁定編輯與刪除按鈕事件
-                document.querySelectorAll('.edit-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => editBook(e.target.dataset.id, books));
-                });
-                document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => deleteBook(e.target.dataset.id));
+                document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', (e) => editBook(e.target.dataset.id, books)));
+                document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => deleteBook(e.target.dataset.id)));
+                
+                // 處理單一勾選時，同步全選框狀態
+                const cbs = document.querySelectorAll('.book-cb');
+                cbs.forEach(cb => {
+                    cb.addEventListener('change', () => {
+                        const allChecked = document.querySelectorAll('.book-cb:checked').length === cbs.length;
+                        document.getElementById('selectAll').checked = allChecked;
+                    });
                 });
             } catch(e) {
-                tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-4 text-center text-red-500">讀取失敗，請檢查權限</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-4 text-center text-red-500">讀取失敗</td></tr>';
             }
         }
         document.getElementById('btnRefresh').addEventListener('click', loadBooks);
 
-        // --- 4. 單筆新增 / 修改 ---
+        // --- 全選功能 ---
+        document.getElementById('selectAll').addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            document.querySelectorAll('.book-cb').forEach(cb => cb.checked = isChecked);
+        });
+
+        // --- 批次刪除功能 ---
+        document.getElementById('btnBatchDelete').addEventListener('click', async () => {
+            const selectedIds = Array.from(document.querySelectorAll('.book-cb:checked')).map(cb => cb.value);
+            
+            if (selectedIds.length === 0) {
+                alert('請先在左側勾選要刪除的書箱！');
+                return;
+            }
+            
+            if (confirm(`⚠️ 警告！您確定要刪除選取的 ${selectedIds.length} 筆書箱資料嗎？\n(刪除後無法復原)`)) {
+                try {
+                    // 使用 Promise.all 批次執行刪除
+                    await Promise.all(selectedIds.map(id => deleteDoc(doc(db, "books", id))));
+                    alert(`✅ 成功刪除 ${selectedIds.length} 筆資料！`);
+                    loadBooks();
+                } catch (error) {
+                    alert('批次刪除過程中發生錯誤，請重新整理後再試。');
+                }
+            }
+        });
+
+        // --- 單筆新增 / 修改 / 刪除 ---
         let isEditing = false;
-        
         document.getElementById('bookForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const bookData = {
@@ -262,23 +299,18 @@
                 descLink: document.getElementById('bookDesc').value.trim(),
                 note: document.getElementById('bookNote').value.trim()
             };
-            
             try {
-                // setDoc 會新增或覆蓋
                 await setDoc(doc(db, "books", bookData.id), bookData);
                 alert(isEditing ? '修改成功！' : '新增成功！');
-                resetForm();
-                loadBooks();
-            } catch (error) {
-                alert("儲存失敗: " + error.message);
-            }
+                resetForm(); loadBooks();
+            } catch (error) { alert("儲存失敗"); }
         });
 
         function editBook(id, books) {
             const book = books.find(b => b.id === id);
             if(book) {
                 document.getElementById('bookId').value = book.id;
-                document.getElementById('bookId').readOnly = true; // 修改時不允許改 ID
+                document.getElementById('bookId').readOnly = true; 
                 document.getElementById('bookId').classList.add('bg-gray-100');
                 document.getElementById('bookName').value = book.name;
                 document.getElementById('bookDesc').value = book.descLink;
@@ -287,7 +319,7 @@
                 document.getElementById('formTitle').textContent = "修改書箱: " + book.id;
                 document.getElementById('btnCancelEdit').classList.remove('hidden');
                 isEditing = true;
-                window.scrollTo(0, 0); // 滾動到表單
+                window.scrollTo(0, 0);
             }
         }
 
@@ -301,19 +333,14 @@
         }
         document.getElementById('btnCancelEdit').addEventListener('click', resetForm);
 
-        // --- 5. 刪除書籍 ---
         async function deleteBook(id) {
-            if(confirm(`確定要刪除登錄號為 ${id} 的書箱嗎？刪除後無法復原！`)) {
-                try {
-                    await deleteDoc(doc(db, "books", id));
-                    loadBooks();
-                } catch(e) {
-                    alert('刪除失敗');
-                }
+            if(confirm(`確定要刪除登錄號為 ${id} 的書箱嗎？`)) {
+                try { await deleteDoc(doc(db, "books", id)); loadBooks(); } 
+                catch(e) { alert('刪除失敗'); }
             }
         }
 
-        // --- 6. 批次匯入 Excel ---
+        // --- 批次匯入 Excel ---
         document.getElementById('btnImport').addEventListener('click', () => {
             const fileInput = document.getElementById('excelFile');
             if (fileInput.files.length === 0) return alert("請先選擇 Excel 檔案！");
@@ -345,7 +372,7 @@
                     }
                     status.textContent = `匯入完成！共新增/更新了 ${count} 筆資料。`;
                     fileInput.value = "";
-                    loadBooks(); // 更新列表
+                    loadBooks(); 
                 } catch (error) {
                     status.textContent = "匯入失敗，請檢查檔案格式。";
                 }
