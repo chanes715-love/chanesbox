@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>長安國小書箱 - 後台管理系統</title>
+    <title>長安國小書箱後台管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -26,9 +26,15 @@
                     <input type="password" id="loginPassword" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500">
                 </div>
                 <p id="loginError" class="text-red-500 text-sm hidden"></p>
-                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
-                    登入系統
-                </button>
+                <div class="flex flex-col gap-3 mt-4">
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-bold text-white bg-green-600 hover:bg-green-700">
+                        登入系統
+                    </button>
+                    <!-- 在登入頁面也提供回到前台的按鈕 -->
+                    <a href="index.html" class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 text-center">
+                        返回查詢頁面
+                    </a>
+                </div>
             </form>
         </div>
     </div>
@@ -43,8 +49,8 @@
             </h1>
             <div class="space-x-4 flex items-center">
                 <span id="userEmailDisplay" class="text-sm text-green-200"></span>
-                <button id="btnOpenPwdModal" class="text-sm bg-green-600 hover:bg-green-500 px-3 py-1 rounded">修改密碼</button>
-                <button id="btnLogout" class="text-sm bg-red-600 hover:bg-red-500 px-3 py-1 rounded">登出</button>
+                <button id="btnOpenPwdModal" class="text-sm bg-green-600 hover:bg-green-500 px-3 py-1 rounded font-bold">修改密碼</button>
+                <button id="btnLogout" class="text-sm bg-red-600 hover:bg-red-500 px-3 py-1 rounded font-bold shadow-sm transition-colors">登出</button>
             </div>
         </header>
 
@@ -153,7 +159,7 @@
         // ==========================================
         // !!! 請貼上您的 Firebase Config !!!
         // ==========================================
-      const firebaseConfig = {
+         const firebaseConfig = {
   apiKey: "AIzaSyDrog2SU3iOuaNXnMT6A5Ekrdmd-5jG6A0",
   authDomain: "bookbox-ee296.firebaseapp.com",
   projectId: "bookbox-ee296",
@@ -194,7 +200,11 @@
             }
         });
 
-        document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
+        // ★ 修改此處：登出後跳轉回 index.html
+        document.getElementById('btnLogout').addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.href = 'index.html'; // 直接跳轉回查詢頁面
+        });
 
         // --- 2. 修改密碼邏輯 ---
         const pwdModal = document.getElementById('pwdModal');
@@ -310,7 +320,6 @@
                 btnBatchDelete.classList.add('hidden');
             }
             
-            // 同步「全選」框的狀態
             const totalBoxes = document.querySelectorAll('.book-checkbox').length;
             selectAllCb.checked = (count === totalBoxes && totalBoxes > 0);
         }
@@ -324,7 +333,6 @@
                 btnBatchDelete.textContent = "刪除中...";
                 
                 try {
-                    // Firestore 批次寫入 (一次最多 500 筆)
                     const batch = writeBatch(db);
                     idsToDelete.forEach(id => {
                         const docRef = doc(db, "books", id);
